@@ -11,11 +11,11 @@ char TASK[] = "Синтаксический анализатор понятия 
 
 // Классификация результата анализатора
 enum class Result {
-    good, badVeryFirstChar,
-    badFirstCharSquare, badLastCharSquare,
-    badFirstCharRound, badLastCharRound,
-    badFirstCharCurly, badLastCharCurly,
-    excessCharacter
+    GOOD, BADVERYFIRSTCHAR,
+    BADFIRSTCHARSQUARE, BADLASTCHARSQUARE,
+    BADFIRSTCHARROUND, BADLASTCHARROUND,
+    BADFIRSTCHARCURLY, BADLASTCHARCURLY,
+    EXCESSCHAR
 };
 
 // Анализатор нескольких последовательностей символов,
@@ -54,40 +54,40 @@ void analyzer(std::ifstream& infile, std::ofstream& outfile)
         int pos = 0;
         Result k = analyzeLine(line, pos, outfile, 1);
 
-        switch (k) {
-            case Result::good:
+        switch (k) { //для обработки результата (верного и ошибочного)
+            case Result::GOOD:
                 std::cout << "ЭТО СКОБКИ!\n\n";
                 outfile   << "ЭТО СКОБКИ!\n\n";
                 break;
-            case Result::badVeryFirstChar:
+            case Result::BADVERYFIRSTCHAR:
                 std::cout << "ЭТО НЕ СКОБКИ!\nСамый первый символ ошибочен.\n\n";
                 outfile   << "ЭТО НЕ СКОБКИ!\nСамый первый символ ошибочен.\n\n";
                 break;
-            case Result::badFirstCharSquare:
+            case Result::BADFIRSTCHARSQUARE:
                 std::cout << "ЭТО НЕ СКОБКИ!\nОжидался символ \'[\' или \'+\'.\n\n";
                 outfile   << "ЭТО НЕ СКОБКИ!\nОжидался символ \'[\' или \'+\'.\n\n";
                 break;
-            case Result::badLastCharSquare:
+            case Result::BADLASTCHARSQUARE:
                 std::cout << "ЭТО НЕ СКОБКИ!\nОжидался символ \']\'.\n\n";
                 outfile   << "ЭТО НЕ СКОБКИ!\nОжидался символ \']\'.\n\n";
                 break;
-            case Result::badFirstCharRound:
+            case Result::BADFIRSTCHARROUND:
                 std::cout << "ЭТО НЕ СКОБКИ!\nОжидался символ \'(\' или \'-\'.\n\n";
                 outfile   << "ЭТО НЕ СКОБКИ!\nОжидался символ \'(\' или \'-\'.\n\n";
                 break;
-            case Result::badLastCharRound:
+            case Result::BADLASTCHARROUND:
                 std::cout << "ЭТО НЕ СКОБКИ!\nОжидался символ \')\'.\n\n";
                 outfile   << "ЭТО НЕ СКОБКИ!\nОжидался символ \')\'.\n\n";
                 break;
-            case Result::badFirstCharCurly:
+            case Result::BADFIRSTCHARCURLY:
                 std::cout << "ЭТО НЕ СКОБКИ!\nОжидался символ \'{\' или \'0\'.\n\n";
                 outfile   << "ЭТО НЕ СКОБКИ!\nОжидался символ \'{\' или \'0\'.\n\n";
                 break;
-            case Result::badLastCharCurly:
+            case Result::BADLASTCHARCURLY:
                 std::cout << "ЭТО НЕ СКОБКИ!\nОжидался символ \'}\'.\n\n";
                 outfile   << "ЭТО НЕ СКОБКИ!\nОжидался символ \'}\'.\n\n";
                 break;
-            case Result::excessCharacter:
+            case Result::EXCESSCHAR:
                 std::cout << "ЭТО НЕ СКОБКИ!\nВстретился лишний символ.\n\n";
                 outfile   << "ЭТО НЕ СКОБКИ!\nВстретился лишний символ.\n\n";
                 break;
@@ -102,9 +102,9 @@ void analyzer(std::ifstream& infile, std::ofstream& outfile)
 Result analyzeLine(const std::string& line, int& pos, std::ofstream& outfile, const int recLevel)
 {
     Result k = brackets(line, pos, outfile, recLevel);
-    if (k == Result::good && pos != line.length()) { // проверка на отсутствие лишних символов на конце
+    if (k == Result::GOOD && pos != line.length()) { // проверка на отсутствие лишних символов на конце
         printLog(line, ++pos, outfile, 0);
-        return Result::excessCharacter;
+        return Result::EXCESSCHAR;
     }
     return k;
 }
@@ -121,7 +121,7 @@ Result brackets(const std::string& line, int& pos, std::ofstream& outfile, const
         k = curly(line, pos, outfile, recLevel);
     } else {
         printLog(line, ++pos, outfile, 0);
-        k = Result::badVeryFirstChar;
+        k = Result::BADVERYFIRSTCHAR;
     }
     return k;
 }
@@ -133,28 +133,28 @@ Result square(const std::string& line, int& pos, std::ofstream& outfile, const i
     printLog(line, pos, outfile, recLevel);
 
     if (c == '+') {
-        return Result::good;
+        return Result::GOOD;
     }
     if (c != '[') {
-        return Result::badFirstCharSquare;
+        return Result::BADFIRSTCHARSQUARE;
     }
 
     k = round(line, pos, outfile, recLevel + 1);
-    if (k != Result::good) {
+    if (k != Result::GOOD) {
         return k;
     }
     k = curly(line, pos, outfile, recLevel + 1);
-    if (k != Result::good) {
+    if (k != Result::GOOD) {
         return k;
     }
 
     c = line[pos++];
     printLog(line, pos, outfile, recLevel);
     if (c != ']') {
-        return Result::badLastCharSquare;
+        return Result::BADLASTCHARSQUARE;
     }
 
-    return Result::good;
+    return Result::GOOD;
 }
 
 Result round(const std::string& line, int& pos, std::ofstream& outfile, const int recLevel)
@@ -164,28 +164,28 @@ Result round(const std::string& line, int& pos, std::ofstream& outfile, const in
     printLog(line, pos, outfile, recLevel);
 
     if (c == '-') {
-        return Result::good;
+        return Result::GOOD;
     }
     if (c != '(') {
-        return Result::badFirstCharRound;
+        return Result::BADFIRSTCHARROUND;
     }
 
     k = curly(line, pos, outfile, recLevel + 1);
-    if (k != Result::good) {
+    if (k != Result::GOOD) {
         return k;
     }
     k = square(line, pos, outfile, recLevel + 1);
-    if (k != Result::good) {
+    if (k != Result::GOOD) {
         return k;
     }
 
     c = line[pos++];
     printLog(line, pos, outfile, recLevel);
     if (c != ')') {
-        return Result::badLastCharRound;
+        return Result::BADLASTCHARROUND;
     }
 
-    return Result::good;
+    return Result::GOOD;
 }
 
 Result curly(const std::string& line, int& pos, std::ofstream& outfile, const int recLevel)
@@ -195,45 +195,45 @@ Result curly(const std::string& line, int& pos, std::ofstream& outfile, const in
     printLog(line, pos, outfile, recLevel);
 
     if (c == '0') {
-        return Result::good;
+        return Result::GOOD;
     }
     if (c != '{') {
-        return Result::badFirstCharCurly;
+        return Result::BADFIRSTCHARCURLY;
     }
 
     k = square(line, pos, outfile, recLevel + 1);
-    if (k != Result::good) {
+    if (k != Result::GOOD) {
         return k;
     }
     k = round(line, pos, outfile, recLevel + 1);
-    if (k != Result::good) {
+    if (k != Result::GOOD) {
         return k;
     }
 
     c = line[pos++];
     printLog(line, pos, outfile, recLevel);
     if (c != '}') {
-        return Result::badLastCharCurly;
+        return Result::BADLASTCHARCURLY;
     }
 
-    return Result::good;
+    return Result::GOOD;
 }
 
 
 void printLog(const std::string& line, const int pos, std::ofstream& outfile, const int recLevel)
 {
-    std::cout << "Глубина рекурсии " << std::setw(2) << recLevel << ": " << line.substr(0, pos) << "\n";
-    outfile   << "Глубина рекурсии " << std::setw(2) << recLevel << ": " << line.substr(0, pos) << "\n";
+    std::cout << std::string(recLevel, '\t') <<"Глубина рекурсии " << std::setw(2) << recLevel << ": " << line.substr(0, pos) << "\n";
+    outfile   << std::string(recLevel, '\t') <<"Глубина рекурсии " << std::setw(2) << recLevel << ": " << line.substr(0, pos) << "\n";
 }
 
 int main()
 {
     std::string readFileName, logFileName;
-    std::ifstream infile;
-    std::ofstream outfile;
+    std::ifstream infile;  // поток для чтения
+    std::ofstream outfile; // поток для вывода
 
-    std::cout << TASK;
-    do {
+    std::cout << TASK; // вывод задания на экран
+    do {               // проверка на корректность введенного имени файла
         std::cout << "Введите название файла для считывания данных: ";
         getline(std::cin, readFileName);
         infile.open(readFileName);

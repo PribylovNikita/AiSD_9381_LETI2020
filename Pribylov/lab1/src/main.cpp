@@ -3,11 +3,12 @@
 #include <string>
 #include <iomanip>
 
-char TASK[] = "Синтаксический анализатор понятия скобки:\n"
+const char TASK[] = "Синтаксический анализатор понятия скобки:\n"
               "скобки ::= квадратные | круглые | фигурные\n"
               "квадратные ::= [круглые фигурные] | +\n"
               "круглые ::= (фигурные квадратные) | -\n"
               "фигурные ::= {квадратные круглые} | 0\n\n";
+const char STOP[] = "STOP";
 
 // Классификация результата анализатора
 enum class Result {
@@ -19,9 +20,9 @@ enum class Result {
 };
 
 // Анализатор нескольких последовательностей символов,
-// принимает открытые файловые потоки:
-// infile для чтения строк и outfile для записи результатов
-void analyzer(std::ifstream& infile, std::ofstream& outfile);
+// принимает поток infile (файловый или стандартный) для чтения строк
+// и файловый поток outfile для записи результатов
+void analyzer(std::istream& infile, std::ofstream& outfile);
 
 // Анализирует последовательность символов,
 // принимает строку line для проверки,
@@ -44,17 +45,18 @@ Result curly(const std::string& line, int& pos, std::ofstream& outfile, const in
 void printLog(const std::string& line, const int pos, std::ofstream& outfile, const int recLevel);
 
 
-void analyzer(std::ifstream& infile, std::ofstream& outfile)
+void analyzer(std::istream& infile, std::ofstream& outfile)
 {
     std::string line;
-    while(getline(infile,line)) {           // читает строки, пока не конец файла,
-        if (!line.length()) continue;       // пропуская пустые
+    while(getline(infile, line)) {
+        if (line == STOP) return;
+        if (!line.length()) continue;
         std::cout << "Проверяется: " << line << "\n";
         outfile   << "Проверяется: " << line << "\n";
         int pos = 0;
         Result k = analyzeLine(line, pos, outfile, 1);
 
-        switch (k) { //для обработки результата (верного и ошибочного)
+        switch (k) {
             case Result::GOOD:
                 std::cout << "ЭТО СКОБКИ!\n\n";
                 outfile   << "ЭТО СКОБКИ!\n\n";
@@ -102,7 +104,7 @@ void analyzer(std::ifstream& infile, std::ofstream& outfile)
 Result analyzeLine(const std::string& line, int& pos, std::ofstream& outfile, const int recLevel)
 {
     Result k = brackets(line, pos, outfile, recLevel);
-    if (k == Result::GOOD && pos != line.length()) { // проверка на отсутствие лишних символов на конце
+    if (k == Result::GOOD && pos != line.length()) {
         printLog(line, ++pos, outfile, 0);
         return Result::EXCESSCHAR;
     }
@@ -139,10 +141,12 @@ Result square(const std::string& line, int& pos, std::ofstream& outfile, const i
         return Result::BADFIRSTCHARSQUARE;
     }
 
+    // проверка подпоследовательности на соответствие понятию "круглые"
     k = round(line, pos, outfile, recLevel + 1);
     if (k != Result::GOOD) {
         return k;
     }
+    // проверка подпоследовательности на соответствие понятию "фигурные"
     k = curly(line, pos, outfile, recLevel + 1);
     if (k != Result::GOOD) {
         return k;
@@ -170,10 +174,12 @@ Result round(const std::string& line, int& pos, std::ofstream& outfile, const in
         return Result::BADFIRSTCHARROUND;
     }
 
+    // проверка подпоследовательности на соответствие понятию "фигурные"
     k = curly(line, pos, outfile, recLevel + 1);
     if (k != Result::GOOD) {
         return k;
     }
+    // проверка подпоследовательности на соответствие понятию "квадратные"
     k = square(line, pos, outfile, recLevel + 1);
     if (k != Result::GOOD) {
         return k;
@@ -201,10 +207,12 @@ Result curly(const std::string& line, int& pos, std::ofstream& outfile, const in
         return Result::BADFIRSTCHARCURLY;
     }
 
+    // проверка подпоследовательности на соответствие понятию "квадратные"
     k = square(line, pos, outfile, recLevel + 1);
     if (k != Result::GOOD) {
         return k;
     }
+    // проверка подпоследовательности на соответствие понятию "круглые"
     k = round(line, pos, outfile, recLevel + 1);
     if (k != Result::GOOD) {
         return k;
@@ -219,36 +227,45 @@ Result curly(const std::string& line, int& pos, std::ofstream& outfile, const in
     return Result::GOOD;
 }
 
-
 void printLog(const std::string& line, const int pos, std::ofstream& outfile, const int recLevel)
 {
-    std::cout << std::string(recLevel, '\t') <<"Глубина рекурсии " << std::setw(2) << recLevel << ": " << line.substr(0, pos) << "\n";
-    outfile   << std::string(recLevel, '\t') <<"Глубина рекурсии " << std::setw(2) << recLevel << ": " << line.substr(0, pos) << "\n";
+    std::cout << std::string(recLevel, '\t') << "Глубина рекурсии " << std::setw(2) << recLevel << ": " << line.substr(0, pos) << "\n";
+    outfile   << std::string(recLevel, '\t') << "Глубина рекурсии " << std::setw(2) << recLevel << ": " << line.substr(0, pos) << "\n";
 }
 
 int main()
 {
-    std::string readFileName, logFileName;
-    std::ifstream infile;  // поток для чтения
-    std::ofstream outfile; // поток для вывода
+    std::string inputFileName, logFileName;
+    std::ifstream infile;
+    std::ofstream outfile;
 
-    std::cout << TASK; // вывод задания на экран
-    do {               // проверка на корректность введенного имени файла
-        std::cout << "Введите название файла для считывания данных: ";
-        getline(std::cin, readFileName);
-        infile.open(readFileName);
+    std::cout << TASK;
+    do {
+        std::cout << "Для считывания данных с клавиатуры введите \"NUL\".\n"
+                     "Для считывания данных с файла введите название файла: ";
+        std::cin >> inputFileName;
+        if (inputFileName == "NUL") break;
+        infile.open(inputFileName);
         if (!infile) {
-            std::cout << "Файла \"" << readFileName << "\" не существует.\n";
+            std::cout << "Файла \"" << inputFileName << "\" не существует.\n";
         }
     } while (!infile);
 
     std::cout << "Введите название файла для записи промежуточных результатов: ";
-    getline(std::cin, logFileName);
+    std::cin >> logFileName;
     outfile.open(logFileName);
 
-    analyzer(infile, outfile);
+    std::cout << "\nЧтение данных прекратится на строке \"" << STOP << "\".\n";
+    if (inputFileName == "NUL") {
+        std::cout << "Вводите данные:\n";
+        analyzer(std::cin, outfile);
+    } else {
+        analyzer(infile, outfile);
+    }
 
-    infile.close();
+    if (infile.is_open()) {
+        infile.close();
+    }
     outfile.close();
     return 0;
 }

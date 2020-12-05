@@ -18,8 +18,7 @@ private:
     Logger(Logger&&) = delete;
     Logger& operator=(const Logger&) = delete;
     Logger& operator=(Logger&&) = delete;
-
-    static Logger logger;
+    
     std::ofstream stream;
 };
 

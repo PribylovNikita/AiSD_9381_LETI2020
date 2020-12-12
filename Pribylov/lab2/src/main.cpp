@@ -5,37 +5,74 @@
 #include "HList.h"
 #include "Logger.h"
 
-char STOP[] = "STOP";
+char kDefaultStopString[] = "STOP";
+char kDefaultFileName[] = "input.txt";
 
-void printTask();
-void initiate();
-void performTask(std::istream& infile);
+void printTask(); // печатает задание
+void printMenu(); // печатает меню
+void menu(); // вызывает меню
+void consoleInput(); // организует ввод с консоли
+void fileInput(); // организует ввод с файла
+void performTask(std::istream& infile); // принимает поток чтения, начинает работу программы
 
 void printTask() {
     Logger::instance().log("Проверка идентичности двух иерархических списков.\n");
 }
 
-void initiate() {
+void printMenu() {
+    std::cout << "1. Ввести данные с клавиатуры.\n"
+                 "2. Ввести данные с файла.\n"
+                 "0. Выход из программы.\n";
+}
+
+void menu() {
+    printTask();
+    printMenu();
+    char c = '1';
+    do {
+        std::cin >> c;
+        switch(c) {
+            case '1':
+                std::cin.ignore(256, '\n');
+                consoleInput();
+                break;
+            case '2':
+                std::cin.ignore(256, '\n');
+                fileInput();
+                break;
+            case '0':
+                std::cout << "Выход из программы.\n";
+                break;
+            default:
+                std::cout << "Неверное значение.\n";
+                break;
+        }
+        if (c != '0') printMenu();
+    } while (c != '0');
+}
+
+void consoleInput() {
+    std::cout << "Вводите данные:\n"
+                 "Чтобы вернуться в меню, введите \"" << kDefaultStopString << "\"\n";
+    performTask(std::cin);
+}
+
+void fileInput() {
     std::string inputFileName;
     std::ifstream infile;
+    std::cout << "Введите название файла:\n"
+                 "По умолчанию данные читаются из файла \"" << kDefaultFileName << "\".\n";
+    getline(std::cin, inputFileName);
 
-    printTask();
-    do {
-        std::cout << "Для считывания данных с клавиатуры введите \"NUL\".\n"
-                     "Для считывания данных с файла введите название файла: ";
-        getline(std::cin, inputFileName);
-        if (inputFileName == "NUL") break;
-        infile.open(inputFileName);
-        if (!infile) {
-            std::cout << "Файла \"" << inputFileName << "\" не существует.\n";
-        }
-    } while (!infile);
+    if (inputFileName.empty()) {
+        inputFileName = kDefaultFileName;
+    }
 
-    std::cout << "\nЧтение данных прекратится на строке \"" << STOP << "\".\n";
-    if (inputFileName == "NUL") {
-        std::cout << "Вводите данные:\n";
-        performTask(std::cin);
+    infile.open(inputFileName);
+    if (!infile) {
+        std::cout << "Файла \"" << inputFileName << "\" не существует.\n";
     } else {
+        std::cout << "Чтение данных прекратится на строке \"" << kDefaultStopString << "\".\n";
         performTask(infile);
     }
 
@@ -55,7 +92,7 @@ void performTask(std::istream& infile)
         if (!first.length()) continue;
 
         Logger::instance().log("Первый список: " + first);
-        if (first == STOP) {
+        if (first == kDefaultStopString) {
             Logger::instance().log("Встретилась терминальная строка.\n");
             return;
         }
@@ -65,7 +102,7 @@ void performTask(std::istream& infile)
         if (!second.length()) continue;
 
         Logger::instance().log("Второй список: " + second);
-        if (second == STOP) {
+        if (second == kDefaultStopString) {
             Logger::instance().log("Встретилась терминальная строка.\n");
             return;
         }
@@ -79,6 +116,6 @@ void performTask(std::istream& infile)
 }
 
 int main() {
-    initiate();
+    menu();
     return 0;
 }

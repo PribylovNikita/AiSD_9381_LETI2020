@@ -167,7 +167,7 @@ void performTask(std::istream& infile)
         }
 
         const char *cstr = str.c_str();
-        for (;;) {
+        for (;;) { // разбиение строки на вектор чисел
             char* pEnd;
             const long i = std::strtol(cstr, &pEnd, 10);
             if (cstr == pEnd) break;

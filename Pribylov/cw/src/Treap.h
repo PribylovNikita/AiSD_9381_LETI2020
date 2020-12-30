@@ -53,7 +53,7 @@ namespace treap {
         }
     };
     void showTrunks(Trunk *p);
-    void printTree(TreapPtr root, Trunk *prev, bool isLeft);
+    void printTree(TreapPtr root, Trunk *prev, bool isLeft, int greenkey);
 }
 
 #endif //TREAP_TREAP_H

@@ -42,15 +42,16 @@ void printVector(const std::vector<int>& vec) {
 }
 
 void printTreapMenu() {
-    std::cout <<"1. Добавить элемент в дерамиду.\n"
+    std::cout << "1. Добавить элемент в дерамиду.\n"
                            "2. Удалить элемент из дерамиды.\n"
-                           "0. Вернуться назад.\n";
+                           "0. Вернуться назад и ввести новые данные.\n";
 }
 
 void treapMenu(TreapPtr& tree) {
     printTreapMenu();
     char c = '1';
     int key;
+    std::string str;
     do {
         std::cin >> c;
         std::cin.ignore(256, '\n');
@@ -58,15 +59,37 @@ void treapMenu(TreapPtr& tree) {
             case '1':
                 std::cout << "Введите значение ключа: ";
                 std::cin >> key;
-                insert(tree, key);
+                for (;;) {
+                    if (std::cin.fail()) {
+                        std::cin.clear();
+                        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                        std::cout << "Необходимо ввести число: ";
+                        std::cin >> key;
+                    }
+                    if (!std::cin.fail()) {
+                        insert(tree, key);
+                        break;
+                    }
+                }
                 break;
             case '2':
                 std::cout << "Введите значение ключа: ";
                 std::cin >> key;
-                remove(tree, key);
+                for (;;) {
+                    if (std::cin.fail()) {
+                        std::cin.clear();
+                        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                        std::cout << "Необходимо ввести число: ";
+                        std::cin >> key;
+                    }
+                    if (!std::cin.fail()) {
+                        remove(tree, key);
+                        break;
+                    }
+                }
                 break;
             case '0':
-                std::cout << "Вовзращаюсь назад.\n\n";
+                std::cout << "Вводите новые данные:\n";
                 return;
             default:
                 std::cout << "Неверное значение.\n";
@@ -157,7 +180,7 @@ void performTask(std::istream& infile)
         if (vec.empty()) continue;
         auto tree = build(vec);
         Logger::instance().log("Построено дерево:\n");
-        printTree(tree, nullptr, false);
+        printTree(tree, nullptr, false, 99999999);
 
         treapMenu(tree);
 
